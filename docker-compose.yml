@@ -1,0 +1,53 @@
+version: "3"
+
+services:
+  client:
+    container_name: vueClient
+    image: client
+    build:
+      context: ./client
+    environment:
+      VUE_APP_API_PROXY: http://elixrApi:4000
+    ports:
+      - "8080:8080"
+    networks:
+      - internal
+
+  phoenix:
+    container_name: elixrApi
+    image: api
+    build:
+      context: ./api
+    environment:
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: time_manager_db
+      PGPORT: 5432
+      PGHOST: elixirDb
+    ports:
+      - "4000:4000"
+    depends_on:
+      - db
+    networks:
+      - internal
+
+  db:
+    container_name: elixirDb
+    image: postgres:9.6
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      PGDATA: /var/lib/postgresql/data/pgdata
+    restart: always
+    volumes:
+      - "/var/run/postgres/postgres.sock:/var/run/postgres/postgres.sock"
+      - "dbdata:/var/lib/postgresql/data"
+    networks:
+      - internal
+
+volumes:
+  dbdata:
+
+networks:
+  internal:
+    driver: bridge
